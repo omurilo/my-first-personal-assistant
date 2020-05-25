@@ -1,8 +1,10 @@
+# coding=UTF-8
 import speech_recognition as sr
 from requests import get
 from bs4 import BeautifulSoup
 from gtts import gTTS
 from paho.mqtt import publish
+import json
 import os
 
 ##### FLAG PARA CONTROLE #####
@@ -14,17 +16,18 @@ hotPrevisao = 'qual a previsão do tempo hoje'
 hotObrigado = 'Não obrigado'
 hotIrrigar = 'ligar a irrigacao'
 
+##### CONFIGURAÇÕES DA CHAVE DO GOOGLE #####
+with open('.env.json', 'r') as credenciais:
+    credenciais = json.load(credenciais)
+
 ##### CONFIGURAÇÕES DO MQTT #####
-server_mqtt = 'soldier.cloudmqtt.com'
+server_mqtt = credenciais['mqtt']['server']
 porta_mqtt = '14909'
 topico_irrigacao = '/onoff/rele'
 topico_combo_acoes = '/onoff/combo'
-usuario_mqtt = 'izoorovw'
-senha_mqtt = 'w1FbpiesTHBI'
+usuario_mqtt = credenciais['mqtt']['usuario']
+senha_mqtt = credenciais['mqtt']['senha']
 
-##### CONFIGURAÇÕES DA CHAVE DO GOOGLE #####
-with open('.env.json', 'r') as credenciais_google:
-    credenciais_google = credenciais_google.read()
     
 def monitorar_audio():
     microfone = sr.Recognizer()
@@ -34,7 +37,7 @@ def monitorar_audio():
         audio = microfone.listen(source)
     try:
         trigger = microfone.recognize_google_cloud(
-            audio, credentials_json=credenciais_google, language='pt-BR')
+            audio, credentials_json=credenciais['google'], language='pt-BR')
         trigger = trigger.lower()
         print(trigger)
         if hotword in trigger and not get_status_trigger():
